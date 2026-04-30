@@ -5,3 +5,5 @@
 *.slx
 *.xlsx
 *.png
+*:xlsx
+*:xls
