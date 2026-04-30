@@ -1,0 +1,80 @@
+% --- SCRIPT PARA PARAMETRIZAR Y GRAFICAR CONTROL ON-OFF ---
+clear; clc; close all;
+
+%% 1. Parámetros de la Planta (Función de Transferencia)
+% Basado en G(s) = 10 / (50s + 1)
+K = 10;             % Ganancia del sistema
+tau = 50;           % Constante de tiempo
+num_planta = [K];
+den_planta = [tau 1];
+
+%% 2. Parámetros del Setpoint (Escalón)
+t_step = 1;         % Segundo en el que arranca el escalón
+SP_ini = 0;         % Valor inicial (0%)
+SP_fin = 80;        % Valor deseado (Ejemplo: 80% de la variable controlada)
+
+%% 3. Parámetros del Controlador (Relay)
+% Aquí puedes probar reduciendo la histéresis como pide el punto 7 del PDF
+histeresis_sup = 0.5;   % Punto de encendido
+histeresis_inf = -0.5;  % Punto de apagado
+out_ON = 100;           % Acción de control al 100%
+out_OFF = 0;            % Acción de control al 0%
+
+%% 4. Configuración y Ejecución de la Simulación
+t_sim = 400; % Tiempo total de simulación en segundos
+nombre_modelo = 'Controlador_ON_OFF.slx'; % ¡IMPORTANTE: Pon aquí el nombre exacto de tu archivo .slx!
+
+disp('Ejecutando simulación...');
+% Ejecutar el modelo desde el código
+simOut = sim(nombre_modelo, 'StopTime', num2str(t_sim));
+
+%% 5. Extraer Datos y Graficar
+% Extraemos el vector de tiempo
+t = simOut.tout;
+
+% Extraemos la variable del objeto de simulación (simOut)
+% Usamos la sintaxis de punto (.) que es compatible con versiones recientes
+datos_crudos = simOut.datos_simulacion; 
+
+% Verificamos en qué formato guardó Simulink los datos
+if isa(datos_crudos, 'timeseries')
+    % Si se guardó como Timeseries (por defecto en MATLAB nuevo)
+    datos = datos_crudos.Data;
+    % Aseguramos que la matriz tenga la forma correcta (Filas x 3 columnas)
+    if size(datos, 1) == 3 && size(datos, 2) ~= 3
+        datos = datos'; 
+    end
+else
+    % Si se guardó correctamente como Array
+    datos = datos_crudos; 
+end
+
+% Separamos las señales (Asumiendo que el Mux recibe: 1.Setpoint, 2.Control, 3.Salida)
+setpoint = datos(:, 1);
+accion_control = datos(:, 2);
+salida_sistema = datos(:, 3);
+
+% Crear la figura con formato profesional
+figure('Name', 'Resultados Laboratorio Control ON-OFF', 'NumberTitle', 'off', 'Position', [100, 100, 800, 600]);
+
+% --- Subplot 1: Variable Controlada vs Setpoint ---
+subplot(2,1,1);
+plot(t, salida_sistema, 'b', 'LineWidth', 2); hold on;
+plot(t, setpoint, 'r--', 'LineWidth', 1.5);
+title('Respuesta del Sistema vs Setpoint (Control ON-OFF)', 'FontSize', 12);
+xlabel('Tiempo (s)');
+ylabel('Amplitud (%)');
+legend('Salida del Sistema (PV)', 'Setpoint (SP)', 'Location', 'best');
+grid on;
+
+% --- Subplot 2: Acción de Control (Salida del Relé) ---
+subplot(2,1,2);
+plot(t, accion_control, 'k', 'LineWidth', 1.5);
+title('Acción de Control (Salida del Controlador)', 'FontSize', 12);
+xlabel('Tiempo (s)');
+ylabel('Señal de Control (%)');
+ylim([-10 110]); % Margen visual para ver claramente el 0 y el 100
+yticks([0 50 100]);
+grid on;
+
+disp('Simulación y gráficas finalizadas con éxito.');

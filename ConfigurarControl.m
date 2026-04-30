@@ -1,0 +1,48 @@
+% Algoritmo controlador PID 
+% Fecha: 21-04-26
+% *****************************
+
+clear all; 
+close all;          
+clc;
+
+% Configurar tiempo de simulación
+tfin = 2500;
+
+%Configura el escalón
+tesc = 5;
+A = 40;               % Grados
+
+% Funcion de tranferencia 
+Kp = 0.83;
+tao = 223;
+num = Kp;
+den = [tao 1];
+tdead = 27.8; 
+
+% Controldador Proporcional 
+Kc = 2.5;
+
+% Controlador PI
+Kc_i = 0.5;
+ti = 10;                                          % tiempo integral
+
+% Controlador PI
+Kc_d = 0.5;
+ti_d = 20;   
+td = ti_d*0.2
+
+
+% Ejecutal Simulink
+sim('SimControlador.slx', tfin)
+t = ans.tout;
+yout = ans.DatosOut.signals(1).values;            % Respuesta del  controlador proporcional
+r = ans.DatosOut.signals(2).values;               % Referencia
+y_pi = ans.DatosOut.signals(3).values;            
+figure;
+plot(t,r,'--k',t,yout, t, y_pi, 'LineWidth',1)    % cambiar el tipo de linea, cambiar colores
+grid;
+legend('r(t)', 'T_p(t)', 'T_{pi}(t)');
+title('Controlador')
+
+
