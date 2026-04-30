@@ -1,0 +1,7 @@
+# Ignorar archivos temporales de MATLAB
+*.asv
+
+# Ignorar archivos de Excel (ojo con la extensión correcta)
+*.slx
+*.xlsx
+*.png
